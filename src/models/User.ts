@@ -19,7 +19,9 @@ const UserSchema: Schema = new Schema(
       name: { type: String, required: true },
       avatarUrl: { type: String, required: true },
       hashedPassword: { type: String, required: true },
-      refreshToken: { type: String }
+      refreshToken: { type: String },
+      contacts: [{ type: mongoose.Types.ObjectId, ref: 'User' }],
+      chats: [{ type: mongoose.Types.ObjectId, ref: 'Chat' }]
    },
    { timestamps: true, versionKey: false }
 );
