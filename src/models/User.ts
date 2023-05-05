@@ -7,6 +7,8 @@ export interface IUser {
    avatarUrl: string;
    hashedPassword: string;
    refreshToken?: string;
+   contacts: mongoose.Types.ObjectId[];
+   chats: mongoose.Types.ObjectId[];
 }
 
 export interface IUserModel extends IUser, Document {}
