@@ -1,5 +1,4 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcrypt';
 
 export interface IUser {
    username: string;
@@ -25,9 +24,5 @@ const UserSchema: Schema = new Schema(
    },
    { timestamps: true, versionKey: false }
 );
-
-UserSchema.methods.comparePassword = function (password: string) {
-   return bcrypt.compareSync(password, this.hashedPassword);
-};
 
 export default mongoose.model<IUserModel>('User', UserSchema);
