@@ -17,7 +17,8 @@ export const singUp = Joi.object({
 
 export const signIn = Joi.object({
    username: username.required(),
-   password: password.required()
+   password: password.required(),
+   persistent: Joi.boolean()
 });
 
 export const forgotPassword = Joi.object({
