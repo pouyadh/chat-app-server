@@ -10,6 +10,7 @@ export interface IUser {
    contacts: mongoose.Types.ObjectId[];
    chats: mongoose.Types.ObjectId[];
    messages: mongoose.Types.ObjectId[];
+   savedMessage: mongoose.Types.ObjectId[];
 }
 
 export interface IUserModel extends IUser, Document {}
@@ -24,7 +25,8 @@ const UserSchema: Schema = new Schema(
       refreshToken: { type: String },
       contacts: [{ type: mongoose.Types.ObjectId, ref: 'User' }],
       chats: [{ type: mongoose.Types.ObjectId, ref: 'Chat' }],
-      messages: [{ type: mongoose.Types.ObjectId, ref: 'Message' }]
+      messages: [{ type: mongoose.Types.ObjectId, ref: 'Message' }],
+      savedMessages: [{ type: mongoose.Types.ObjectId, ref: 'Message' }]
    },
    { timestamps: true, versionKey: false }
 );
