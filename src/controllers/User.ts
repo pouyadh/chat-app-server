@@ -3,40 +3,12 @@ import mongoose from 'mongoose';
 import User, { IUser, IUserModel } from '../models/User';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { config, TokenType } from '../config/config';
-import { resetToken, username as usernameSchema } from '../schemas/User';
+import { config } from '../config/config';
+import { username as usernameSchema } from '../schemas/User';
 
 import { AppRequest } from '../types';
 import { AppError } from '../library/AppError';
-
-interface ITokenPayloadObject extends JwtPayload {
-   type: TokenType;
-   _id: string;
-   username: string;
-}
-
-const generateToken = (user: Pick<IUserModel, '_id' | 'username'>, type: TokenType) => {
-   const { _id, username } = user;
-   const { secret, expiresIn } = config.token[type];
-   const payload = { type, _id, username };
-   return 'Bearer ' + jwt.sign(payload, secret, { expiresIn });
-};
-
-const verifyToken = (token: string, type: TokenType) => {
-   try {
-      if (!token) return null;
-      const [schema, _token] = token.split(' ');
-      if (schema !== 'Bearer') return null;
-      const payload = jwt.verify(_token, config.token[type].secret);
-      if (typeof payload === 'object') {
-         return payload as ITokenPayloadObject;
-      } else {
-         throw new Error('Invalid Token');
-      }
-   } catch {
-      return null;
-   }
-};
+import { generateAuthToken, verifyAuthToken } from '../utils/generate-token';
 
 const tokenCookieOptions: CookieOptions = {
    httpOnly: true,
@@ -54,8 +26,8 @@ const signUpUser = async (req: Request, res: Response, next: NextFunction) => {
       email,
       avatarUrl
    });
-   const accessToken = generateToken(user, 'access');
-   const refreshToken = generateToken(user, 'refresh');
+   const accessToken = generateAuthToken('access', user);
+   const refreshToken = generateAuthToken('refresh', user);
    user.refreshToken = refreshToken;
    await user.save().catch((err) => {
       if (err.code === 11000) {
@@ -72,8 +44,8 @@ const signInUser = async (req: Request, res: Response, next: NextFunction) => {
    const { username, password } = req.body;
    const user = await User.findOne({ username });
    if (!user || !bcrypt.compareSync(password, user.hashedPassword)) return res.sendStatus(403);
-   const accessToken = generateToken(user, 'access');
-   const refreshToken = generateToken(user, 'refresh');
+   const accessToken = generateAuthToken('access', user);
+   const refreshToken = generateAuthToken('refresh', user);
    user.refreshToken = refreshToken;
    await user.save();
    const safeUser = {
@@ -90,9 +62,9 @@ const signInUser = async (req: Request, res: Response, next: NextFunction) => {
 const getToken = (req: Request, res: Response, next: NextFunction) => {
    const { refreshToken } = req.cookies;
    if (!refreshToken) return res.sendStatus(401);
-   const refreshTokenPayloadObject = verifyToken(refreshToken, 'refresh');
+   const refreshTokenPayloadObject = verifyAuthToken('refresh', refreshToken);
    if (!refreshTokenPayloadObject) return res.sendStatus(403);
-   const accessToken = generateToken(refreshTokenPayloadObject, 'access');
+   const accessToken = generateAuthToken('access', refreshTokenPayloadObject);
    return res.cookie('accessToken', accessToken, tokenCookieOptions).sendStatus(201);
 };
 const getOwnUser = async (req: AppRequest, res: Response, next: NextFunction) => {
@@ -154,7 +126,7 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction) =
    const { email } = req.body;
    const user = await User.findOne({ email });
    if (!user) return res.sendStatus(404);
-   const resetPasswordToken = generateToken(user, 'resetPassword');
+   const resetPasswordToken = generateAuthToken('resetPassword', user);
    const resetLink = `${config.client.web.baseUrl}/auth/reset-password?token=${resetPasswordToken}`;
    res.sendStatus(201);
    // send email
@@ -163,7 +135,7 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction) =
 const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
    const { resetToken, password } = req.body;
    console.log(resetToken);
-   const payload = verifyToken(resetToken, 'resetPassword');
+   const payload = verifyAuthToken('resetPassword', resetToken);
    if (!payload || payload.type !== 'resetPassword') return res.sendStatus(403);
    const user = await User.findById(payload._id);
    if (!user) return res.sendStatus(404);

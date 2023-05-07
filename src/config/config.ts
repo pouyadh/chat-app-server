@@ -47,5 +47,3 @@ export const config = {
       }
    }
 };
-
-export type TokenType = keyof typeof config.token;
