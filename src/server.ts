@@ -1,12 +1,15 @@
 import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
-import mongoose, { mongo } from 'mongoose';
+import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logging from './library/Logging';
 import 'express-async-errors';
 import userRouter from './routes/User';
 import cookieParser from 'cookie-parser';
 import { AppError } from './library/AppError';
+import { Server } from 'socket.io';
+import socketAuth from './middlewares/socket-auth';
+import socketHandler from './handler/socket-handler';
 
 console.clear();
 Logging.info('Starting the server...');
@@ -78,9 +81,19 @@ const StartServer = () => {
       return res.status(404).json({ message: error.message });
    });
 
-   http
+   const httpServer = http
       .createServer(app)
       .listen(config.server.port, () =>
          Logging.info(`Server is running on port ${config.server.port}`)
       );
+
+   const io = new Server(httpServer, {
+      cors: {
+         origin: config.client.web.baseUrl,
+         credentials: true
+      }
+   });
+
+   io.use(socketAuth(true));
+   io.on('connection', socketHandler);
 };
