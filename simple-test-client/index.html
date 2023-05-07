@@ -1,79 +1,80 @@
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <button id="get-user">Get User</button>
-    <button id="signout">Sign out</button>
-    <button id="get-token">Get Token</button>
-    <button id="get-users">Get All Users</button>
-    <h3>Sign in</h3>
-    <form id="signin">
-      <label>username</label>
-      <input type="text" name="username" /><br />
-      <label>password</label>
-      <input type="password" name="password" /><br />
-      <button type="submit">submit</button>
-    </form>
-    <h3>Sign up</h3>
-    <form id="signup">
-      <label>username</label>
-      <input type="text" name="username" /><br />
-      <label>email</label>
-      <input type="email" name="email" /><br />
-      <label>password</label>
-      <input type="password" name="password" /><br />
-      <label>name</label>
-      <input type="text" name="name" /><br />
-      <label>avatarUrl</label>
-      <input type="text" name="avatarUrl" /><br />
-      <button type="submit">submit</button>
-    </form>
+   <head>
+      <meta charset="UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Document</title>
+   </head>
+   <body>
+      <h3>Socket Connection Status: <span id="socket-connection-status"></span></h3>
+      <button id="get-user">Get User</button>
+      <button id="signout">Sign out</button>
+      <button id="get-token">Get Token</button>
+      <button id="get-users">Get All Users</button>
+      <h3>Sign in</h3>
+      <form id="signin">
+         <label>username</label>
+         <input type="text" name="username" /><br />
+         <label>password</label>
+         <input type="password" name="password" /><br />
+         <button type="submit">submit</button>
+      </form>
+      <h3>Sign up</h3>
+      <form id="signup">
+         <label>username</label>
+         <input type="text" name="username" /><br />
+         <label>email</label>
+         <input type="email" name="email" /><br />
+         <label>password</label>
+         <input type="password" name="password" /><br />
+         <label>name</label>
+         <input type="text" name="name" /><br />
+         <label>avatarUrl</label>
+         <input type="text" name="avatarUrl" /><br />
+         <button type="submit">submit</button>
+      </form>
 
-    <h3>Forgot Password</h3>
-    <form id="forgot-password">
-      <label>email</label>
-      <input type="email" name="email" /><br />
-      <button type="submit">submit</button>
-    </form>
+      <h3>Forgot Password</h3>
+      <form id="forgot-password">
+         <label>email</label>
+         <input type="email" name="email" /><br />
+         <button type="submit">submit</button>
+      </form>
 
-    <h3>Reset Password</h3>
-    <form id="reset-password">
-      <label>password</label>
-      <input type="password" name="password" /><br />
-      <input type="hidden" name="resetToken" value="12345" />
-      <button type="submit">submit</button>
-    </form>
+      <h3>Reset Password</h3>
+      <form id="reset-password">
+         <label>password</label>
+         <input type="password" name="password" /><br />
+         <input type="hidden" name="resetToken" value="12345" />
+         <button type="submit">submit</button>
+      </form>
 
-    <h3>User by username</h3>
-    <form id="user-by-username">
-      <label>username</label>
-      <input type="text" name="username" /><br />
-      <button type="submit">submit</button>
-    </form>
+      <h3>User by username</h3>
+      <form id="user-by-username">
+         <label>username</label>
+         <input type="text" name="username" /><br />
+         <button type="submit">submit</button>
+      </form>
 
-    <h3>Update</h3>
-    <form id="update">
-      <label>username</label>
-      <input type="text" name="username" /><br />
-      <label>email</label>
-      <input type="email" name="email" /><br />
-      <label>name</label>
-      <input type="text" name="name" /><br />
-      <label>avatarUrl</label>
-      <input type="text" name="avatarUrl" /><br />
-      <button type="submit">submit</button>
-    </form>
+      <h3>Update</h3>
+      <form id="update">
+         <label>username</label>
+         <input type="text" name="username" /><br />
+         <label>email</label>
+         <input type="email" name="email" /><br />
+         <label>name</label>
+         <input type="text" name="name" /><br />
+         <label>avatarUrl</label>
+         <input type="text" name="avatarUrl" /><br />
+         <button type="submit">submit</button>
+      </form>
 
-    <h3>Delete Account</h3>
-    <form id="delete-account">
-      <label>password</label>
-      <input type="password" name="password" /><br />
-      <button type="submit">submit</button>
-    </form>
-  </body>
-  <script src="./script.js"></script>
+      <h3>Delete Account</h3>
+      <form id="delete-account">
+         <label>password</label>
+         <input type="password" name="password" /><br />
+         <button type="submit">submit</button>
+      </form>
+   </body>
+   <script src="./script.js" type="module"></script>
 </html>
