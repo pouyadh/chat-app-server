@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
+import { CookieOptions } from 'express';
 dotenv.config();
 
 //const MONGO_USERNAME = process.env.MONGO_USERNAME || '';
 //const MONGO_PASSWORD = process.env.MONGO_PASSWORD || '';
-const MONGO_URL = `mongodb://localhost:27017`;
+const MONGO_URL = process.env.MONGO_DB_URL || 'mongodb://localhost:27017';
 
 const SERVER_HOST_NAME = process.env.SERVER_HOST_NAME || 'http://127.0.0.1';
 const SERVER_PORT = process.env.SERVER_PORT ? Number(process.env.SERVER_PORT) : 1337;
@@ -16,7 +17,13 @@ const RESET_PASSWORD_TOKEN_SECRET =
 const CLIENT_WEB_HOST_NAME = process.env.CLIENT_WEB_HOST_NAME || 'http://127.0.0.1';
 const CLIENT_WEB_PORT = process.env.CLIENT_WEB_PORT ? Number(process.env.CLIENT_WEB_PORT) : 3000;
 
-export const config = {
+const tokenCookieOptions: CookieOptions = {
+   httpOnly: true,
+   sameSite: 'none',
+   secure: true
+};
+
+export default {
    mongo: {
       url: MONGO_URL
    },
@@ -45,5 +52,6 @@ export const config = {
          secret: RESET_PASSWORD_TOKEN_SECRET,
          expiresIn: '1h'
       }
-   }
+   },
+   tokenCookieOptions
 };

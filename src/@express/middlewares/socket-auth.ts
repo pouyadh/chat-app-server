@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import cookie from 'cookie';
-import { config } from '../config/config';
+import config from '../../config';
 import jwt from 'jsonwebtoken';
 
 const socketAuth =

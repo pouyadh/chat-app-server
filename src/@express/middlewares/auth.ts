@@ -1,7 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { config } from '../config/config';
-import { AppRequest } from '../types';
+import config from '../../config';
 
 const auth =
    (required: boolean = false) =>
