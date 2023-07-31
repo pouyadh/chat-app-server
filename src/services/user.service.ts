@@ -106,7 +106,8 @@ export default class UserService {
       });
       await user.save().catch((err) => {
          if (err.code === 11000) {
-            throw new AppError(httpStatus.CONFLICT);
+            console.log(err);
+            throw new AppError(httpStatus.CONFLICT, 'Username or Email already exists');
          } else {
             throw err;
          }
