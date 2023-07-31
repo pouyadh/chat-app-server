@@ -9,8 +9,8 @@ import expressJoiErrorHandlerMiddleware from './middlewares/express-joi-error-ha
 const expressApp = express();
 
 expressApp.use(Logging.expressMiddleware());
-expressApp.use(express.urlencoded({ extended: true }));
-expressApp.use(express.json());
+expressApp.use(express.urlencoded({ extended: true, limit: '50mb' }));
+expressApp.use(express.json({ limit: '50mb' }));
 expressApp.use(cookieParser());
 expressApp.use(generalHeadersOptions());
 
