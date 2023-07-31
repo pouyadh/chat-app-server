@@ -116,7 +116,8 @@ export default class UserService {
    static async signin(form: { username: string; password: string; persistent?: boolean }) {
       validateFlatForm(form, ['username', 'password'], ['persistent']);
       const user = await User.findOne({ username: form.username });
-      if (!user || !user.verifyPassword(form.password)) throw new AppError(httpStatus.FORBIDDEN);
+      if (!user || !user.verifyPassword(form.password))
+         throw new AppError(httpStatus.FORBIDDEN, 'Invalid credentials');
       const accessToken = this._generateToken('access', user);
       const refreshToken = this._generateToken('refresh', user);
       user.refreshToken = refreshToken;
