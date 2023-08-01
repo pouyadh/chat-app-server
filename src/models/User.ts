@@ -17,6 +17,13 @@ export interface IUser {
    channels: Types.ObjectId[];
    savedMessages: Types.ObjectId[];
    lastSeen: Date;
+   folders: {
+      name: string;
+      chats: {
+         type: 'user' | 'group' | 'channel';
+         id: Types.ObjectId;
+      }[];
+   }[];
 }
 export interface IUserMethods {
    verifyPassword(password: string): boolean;
@@ -42,7 +49,18 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       groupChats: [{ type: Schema.Types.ObjectId, ref: 'GroupChat' }],
       channels: [{ type: Schema.Types.ObjectId, ref: 'Channel' }],
       savedMessages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
-      lastSeen: { type: Date, default: Date.now }
+      lastSeen: { type: Date, default: Date.now },
+      folders: [
+         {
+            name: String,
+            chats: [
+               {
+                  type: String,
+                  id: Schema.Types.ObjectId
+               }
+            ]
+         }
+      ]
    },
    { timestamps: true, versionKey: false }
 );
