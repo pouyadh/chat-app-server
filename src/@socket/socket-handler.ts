@@ -22,9 +22,15 @@ export default async function (
    socket.on('GroupChatService', createHandlerFromObject(new GroupChatService(userService)));
    socket.on('ChannelService', createHandlerFromObject(new ChannelService(userService)));
 
-   userService.getUserData().then(({ channels, groupChats }) => {
-      socket.join([...channels, groupChats].map((x) => x.toString()));
-   });
+   userService
+      .getUserData()
+      .then(({ channels, groupChats }) => {
+         socket.join([...channels, groupChats].map((x) => x.toString()));
+      })
+      .catch((e) => {
+         // User is deleted, but his access token remains valid for a while
+         socket.disconnect(true);
+      });
 
    Logging.info(`Socket connected. user-> ${socket.data.userService.userIdentity.username}`);
    socket.once('disconnect', (reason) => {
