@@ -11,6 +11,7 @@ import UserService, { IUserIdentity } from './user.service';
 import Message from '../models/Message';
 import { kickAllSocketsFromTheRoom } from '../@socket/utils';
 import { io } from '../@socket/socket';
+import throwIfError from '../utils/throwIfError';
 
 export default class GroupChatService {
    private static async _getChat(groupChatId: string) {
@@ -75,11 +76,31 @@ export default class GroupChatService {
       kickAllSocketsFromTheRoom(form.groupChatId);
    }
 
-   async getInfo(form: { groupChatId: string }) {
-      validateFlatForm(form, ['groupChatId']);
-      const chat = await GroupChatService._getChat(form.groupChatId);
-      this._checkPermission(chat, 'seeGroupInfo');
-      return chat.info;
+   async getInfo(form: { groupChatId?: string; groupChatIds?: string[] }) {
+      throwIfError(
+         JoiFrom({
+            groupChatId: false,
+            groupChatIds: false
+         })
+            .xor('groupChatId', 'groupChatIds')
+            .validate(form)
+      );
+      if (form.groupChatId) {
+         const chat = await GroupChatService._getChat(form.groupChatId);
+         this._checkPermission(chat, 'seeGroupInfo');
+         return chat.info;
+      } else if (form.groupChatIds) {
+         const chats = await GroupChat.find({ _id: { $in: form.groupChatIds } });
+
+         return chats.map((chat) => {
+            try {
+               this._checkPermission(chat, 'seeGroupInfo');
+               return chat.info;
+            } catch (error) {
+               return null;
+            }
+         });
+      }
    }
    async addMember(form: { groupChatId: string; userId: string }) {
       validateFlatForm(form, ['groupChatId', 'userId']);
