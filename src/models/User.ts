@@ -1,5 +1,6 @@
 import { Model, Schema, model, Types, HydratedDocument } from 'mongoose';
 import bcrypt from 'bcrypt';
+import pick from '../utils/pick';
 
 export type Folder = {
    id: Types.ObjectId;
@@ -28,9 +29,15 @@ export interface IUser {
    lastSeen: Date;
    folders: Folder[];
 }
+
+export interface IUserPublicProfile extends Pick<IUser, 'username' | 'name' | 'avatarUrl'> {
+   _id: Types.ObjectId;
+}
+
 export interface IUserMethods {
    verifyPassword(password: string): boolean;
    createFolder(name: string, chats?: Folder['chats']): void;
+   getPublicProfile(): IUserPublicProfile;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {}
@@ -92,6 +99,13 @@ schema.method<InstanceType<typeof User>>(
          name,
          chats
       });
+   }
+);
+
+schema.method<InstanceType<typeof User>>(
+   'getPublicProfile',
+   function getPublicProfile(): IUserPublicProfile {
+      return pick(this.toObject(), '_id', 'username', 'name', 'avatarUrl');
    }
 );
 

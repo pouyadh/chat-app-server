@@ -162,7 +162,7 @@ export default class UserService {
    static async getPublicProfilesById(form: { userIds: string[] }) {
       validateFlatForm(form, ['userIds']);
       const users = await User.find({ _id: { $in: form.userIds } });
-      return users.forEach((u) => pick(u.toObject(), '_id', 'name', 'avatarUrl', 'username'));
+      return users.forEach((u) => u.getPublicProfile());
    }
 
    userIdentity: IUserIdentity;
@@ -174,6 +174,10 @@ export default class UserService {
       const user = await User.findById(this.userIdentity._id);
       if (!user) throw new AppError(httpStatus.NOT_FOUND);
       return user;
+   }
+
+   async getPublicProfilesById(form: { userIds: string[] }) {
+      return await UserService.getPublicProfilesById(form);
    }
 
    async signout() {
