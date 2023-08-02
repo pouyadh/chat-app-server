@@ -45,6 +45,9 @@ const fields = {
    description: Joi.string(),
    get groupChatIds() {
       return Joi.array().items(this.groupChatId).min(1);
+   },
+   get channelIds() {
+      return Joi.array().items(this.channelId).min(1);
    }
 };
 export default fields;
