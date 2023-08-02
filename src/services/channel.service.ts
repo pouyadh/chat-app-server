@@ -12,6 +12,7 @@ import Message, { IMessage } from '../models/Message';
 import { getSocketByUserIds, kickAllSocketsFromTheRoom } from '../@socket/utils';
 import { io } from '../@socket/socket';
 import User from '../models/User';
+import throwIfError from '../utils/throwIfError';
 
 export default class ChannelService {
    private static async _getChat(channelId: string) {
@@ -111,12 +112,33 @@ export default class ChannelService {
       kickAllSocketsFromTheRoom(form.channelId);
    }
 
-   async getInfo(form: { channelId: string }) {
-      validateFlatForm(form, ['channelId']);
-      const chat = await ChannelService._getChat(form.channelId);
-      this._checkPermission(chat, 'seeChannelInfo');
-      return chat.info;
+   async getInfo(form: { channelId?: string; channelIds?: string[] }) {
+      throwIfError(
+         JoiFrom({
+            channelId: false,
+            channelIds: false
+         })
+            .xor('channelId', 'channelIds')
+            .validate(form)
+      );
+      if (form.channelId) {
+         const chat = await ChannelService._getChat(form.channelId);
+         this._checkPermission(chat, 'seeChannelInfo');
+         return chat.info;
+      } else if (form.channelIds) {
+         const chats = await Channel.find({ _id: { $in: form.channelIds } });
+
+         return chats.map((chat) => {
+            try {
+               this._checkPermission(chat, 'seeChannelInfo');
+               return chat.info;
+            } catch (error) {
+               return null;
+            }
+         });
+      }
    }
+
    async addSubscriber(form: { channelId: string; userId: string }) {
       validateFlatForm(form, ['channelId', 'userId']);
       const chat = await ChannelService._getChat(form.channelId);
