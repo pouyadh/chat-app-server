@@ -54,12 +54,14 @@ export type ChannelActivityContentItem = {
 
 export type ChannelContentItem = ChannelActivityContentItem | ChannelMessageContentItem;
 
+export type ChannelInfo = {
+   avatarUrl: string;
+   name: string;
+   description: string;
+};
+
 export interface IChannel {
-   info: {
-      avatarUrl: string;
-      name: string;
-      description: string;
-   };
+   info: ChannelInfo;
    subscribers: {
       role: ChannelRoles;
       user: Types.ObjectId;
