@@ -42,6 +42,9 @@ const fields = {
    deleteForEveryone: Joi.boolean(),
    userService: Joi.object(),
    deleteForOtherPerson: Joi.boolean(),
-   description: Joi.string()
+   description: Joi.string(),
+   get groupChatIds() {
+      return Joi.array().items(this.groupChatId).min(1);
+   }
 };
 export default fields;
