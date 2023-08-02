@@ -59,12 +59,14 @@ export type GroupChatActivityContentItem = {
 
 export type GroupChatContentItem = GroupChatActivityContentItem | GroupChatMessageContentItem;
 
+export type GroupInfo = {
+   avatarUrl: string;
+   name: string;
+   description: string;
+};
+
 export interface IGroupChat {
-   info: {
-      avatarUrl: string;
-      name: string;
-      description: string;
-   };
+   info: GroupInfo;
    members: {
       role: GroupChatRoles;
       user: Types.ObjectId;
