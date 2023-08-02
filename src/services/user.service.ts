@@ -1,5 +1,5 @@
 import { HydratedDocument, Types } from 'mongoose';
-import User, { IUser, IUserMethods } from '../models/User';
+import User, { Folder, IUser, IUserMethods } from '../models/User';
 import { AppError } from '../library/AppError';
 import httpStatus from 'http-status';
 import omit from '../utils/omit';
@@ -323,6 +323,39 @@ export default class UserService {
          method: 'isTyping',
          arg: form
       });
+      return true;
+   }
+
+   async createFolder(form: { name: string; chats: Folder['chats'] }) {
+      const user = await this._getFullUser();
+      user.createFolder(form.name, form.chats || []);
+      await user.save();
+      return true;
+   }
+   async addChatToFolder(form: { folderId: string; chat: Folder['chats'][number] }) {
+      const user = await this._getFullUser();
+      const folder = user.folders.find((f) => f.id.equals(form.chat.id));
+      if (!folder) throw new AppError(httpStatus.NOT_FOUND);
+      folder.chats.push(form.chat);
+      await user.save();
+      return true;
+   }
+   async removeFolder(form: { folderId: string }) {
+      const user = await this._getFullUser();
+      const fCountBeforeRemove = user.folders.length;
+      user.folders = user.folders.filter((f) => !f.id.equals(form.folderId));
+      if (fCountBeforeRemove === user.folders.length) throw new AppError(httpStatus.NOT_FOUND);
+      await user.save();
+      return true;
+   }
+   async removeChatFromFolder(form: { folderId: string; chatId: string }) {
+      const user = await this._getFullUser();
+      const folder = user.folders.find((f) => f.id.equals(form.folderId));
+      if (!folder) throw new AppError(httpStatus.NOT_FOUND);
+      const cCountBefroeRemove = folder.chats.length;
+      folder.chats = folder.chats.filter((c) => !c.id.equals(form.chatId));
+      if (cCountBefroeRemove === folder.chats.length) throw new AppError(httpStatus.NOT_FOUND);
+      await user.save();
       return true;
    }
 }

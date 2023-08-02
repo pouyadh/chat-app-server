@@ -1,6 +1,15 @@
 import { Model, Schema, model, Types, HydratedDocument } from 'mongoose';
 import bcrypt from 'bcrypt';
 
+export type Folder = {
+   id: Types.ObjectId;
+   name: string;
+   chats: {
+      type: 'user' | 'group' | 'channel';
+      id: Types.ObjectId;
+   }[];
+};
+
 export interface IUser {
    username: string;
    email: string;
@@ -17,16 +26,11 @@ export interface IUser {
    channels: Types.ObjectId[];
    savedMessages: Types.ObjectId[];
    lastSeen: Date;
-   folders: {
-      name: string;
-      chats: {
-         type: 'user' | 'group' | 'channel';
-         id: Types.ObjectId;
-      }[];
-   }[];
+   folders: Folder[];
 }
 export interface IUserMethods {
    verifyPassword(password: string): boolean;
+   createFolder(name: string, chats?: Folder['chats']): void;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {}
@@ -52,6 +56,7 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       lastSeen: { type: Date, default: Date.now },
       folders: [
          {
+            id: Schema.Types.ObjectId,
             name: String,
             chats: [
                {
@@ -78,6 +83,17 @@ schema.pre('save', async function (next) {
 schema.method('verifyPassword', function verifyPassword(password: string): boolean {
    return bcrypt.compareSync(password, this.password);
 });
+
+schema.method<InstanceType<typeof User>>(
+   'createFolder',
+   function createFolder(name: string, chats: Folder['chats'] = []): void {
+      this.folders.push({
+         id: new Types.ObjectId(),
+         name,
+         chats
+      });
+   }
+);
 
 const User = model<IUser, UserModel>('User', schema);
 
