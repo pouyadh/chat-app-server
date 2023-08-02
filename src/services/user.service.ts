@@ -334,7 +334,7 @@ export default class UserService {
    }
    async addChatToFolder(form: { folderId: string; chat: Folder['chats'][number] }) {
       const user = await this._getFullUser();
-      const folder = user.folders.find((f) => f.id.equals(form.chat.id));
+      const folder = user.folders.find((f) => f.id.equals(form.folderId));
       if (!folder) throw new AppError(httpStatus.NOT_FOUND);
       folder.chats.push(form.chat);
       await user.save();
