@@ -44,6 +44,7 @@ export interface IUserMethods {
    verifyPassword(password: string): boolean;
    createFolder(name: string, chats?: Folder['chats']): void;
    getPublicProfile(): IUserPublicProfile;
+   markPrivateMessagesAsSeen(userId: string, lastSeenMessageId: string): void;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {}
@@ -118,6 +119,21 @@ schema.method<InstanceType<typeof User>>(
    'getPublicProfile',
    function getPublicProfile(): IUserPublicProfile {
       return pick(this.toObject(), '_id', 'username', 'name', 'avatarUrl');
+   }
+);
+
+schema.method<InstanceType<typeof User>>(
+   'markPrivateMessagesAsSeen',
+   function markPrivateMessagesAsSeen(userId: string, lastSeenMessageId: string): void {
+      const pv = this.privateChats.find((pv) => pv.user.equals(userId));
+      if (!pv) return;
+      let idx: number = pv.messages.length - 1;
+      while (idx > 0 && !pv.messages[idx].message.equals(lastSeenMessageId)) {
+         idx--;
+      }
+      while (idx > 0 && pv.messages[idx].status !== 'seen') {
+         pv.messages[idx].status = 'seen';
+      }
    }
 );
 
