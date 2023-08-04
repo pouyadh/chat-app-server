@@ -19,9 +19,12 @@ export interface IUser {
    password: string;
    refreshToken?: string;
    contacts: Types.ObjectId[];
-   privateMessages: {
-      sender: Types.ObjectId;
-      message: Types.ObjectId;
+   privateChats: {
+      user: Types.ObjectId;
+      messages: {
+         sender: Types.ObjectId;
+         message: Types.ObjectId;
+      }[];
    }[];
    groupChats: Types.ObjectId[];
    channels: Types.ObjectId[];
@@ -51,10 +54,15 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       password: { type: String, required: true },
       refreshToken: { type: String },
       contacts: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-      privateMessages: [
+      privateChats: [
          {
-            sender: { type: Schema.Types.ObjectId, ref: 'User' },
-            message: { type: Schema.Types.ObjectId, ref: 'Message' }
+            user: { type: Schema.Types.ObjectId, ref: 'User' },
+            messages: [
+               {
+                  sender: { type: Schema.Types.ObjectId, ref: 'User' },
+                  message: { type: Schema.Types.ObjectId, ref: 'Message' }
+               }
+            ]
          }
       ],
       groupChats: [{ type: Schema.Types.ObjectId, ref: 'GroupChat' }],
