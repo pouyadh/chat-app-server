@@ -9,6 +9,9 @@ import throwIfError from '../utils/throwIfError';
 import config from '../config';
 import jwt from 'jsonwebtoken';
 import { io } from '../@socket/socket';
+import { IGroupChat } from '../models/GroupChat';
+import { IChannel } from '../models/Channel';
+import Message from '../models/Message';
 
 export interface IUserIdentity {
    _id: string;
@@ -247,8 +250,15 @@ export default class UserService {
    }
 
    async getUserData() {
-      const user = await this._getFullUser();
-      return omit(user.toObject(), 'password', 'refreshToken');
+      const user = await (
+         await this._getFullUser()
+      ).populate<{
+         groupChats: HydratedDocument<IGroupChat>[];
+         channels: IChannel[];
+         contacts: InstanceType<typeof User>[];
+      }>(['groupChats', 'channels', 'contacts']);
+      const contacts = user.contacts.map((c) => c.getPublicProfile());
+      return { ...omit(user.toObject(), 'password', 'refreshToken'), contacts };
    }
 
    async addContact(form: { userId: string }) {
