@@ -292,6 +292,64 @@ export default class UserService {
       }
    }
 
+   async sendMessage(form: { userId: string; message: string }) {
+      validateFlatForm(form, ['userId'], ['deleteForOtherPerson']);
+      const user = await this._getFullUser();
+      const userOid = new Types.ObjectId(this.userIdentity._id);
+      const otherUserOid = new Types.ObjectId(form.userId);
+      const message = new Message({
+         _id: userOid,
+         sender: this.userIdentity._id,
+         content: {
+            text: form.message
+         }
+      });
+
+      let userPv = user.privateChats.find((pv) => pv.user.equals(form.userId));
+      if (!userPv) {
+         userPv = {
+            user: otherUserOid,
+            messages: []
+         };
+         user.privateChats.push(userPv);
+      }
+      userPv.messages.push({
+         sender: userOid,
+         message: message._id
+      });
+
+      const otherUser = await User.findById(form.userId);
+      if (!otherUser) throw new AppError(httpStatus.NOT_FOUND);
+      let otherUserPv = otherUser.privateChats.find((pv) => pv.user.equals(this.userIdentity._id));
+      if (!otherUserPv) {
+         otherUserPv = {
+            user: userOid,
+            messages: []
+         };
+         otherUser.privateChats.push(otherUserPv);
+      }
+      otherUserPv.messages.push({
+         sender: userOid,
+         message: message._id
+      });
+
+      await user.save();
+      await otherUser.save();
+
+      io.to(form.userId).emit('userSlice', {
+         method: 'addMessageToPrivateChat',
+         arg: {
+            user: this.userIdentity._id,
+            message: {
+               sender: this.userIdentity._id,
+               message: message.toObject()
+            }
+         }
+      });
+
+      return true;
+   }
+
    async deletePrivateChat(form: { userId: string; deleteForOtherPerson?: boolean }) {
       validateFlatForm(form, ['userId'], ['deleteForOtherPerson']);
       const user = await this._getFullUser();
