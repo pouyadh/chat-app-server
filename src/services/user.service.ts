@@ -293,6 +293,16 @@ export default class UserService {
       }
    }
 
+   async markPrivateMessagesAsSeen(form: { userId: string; lastSeenMessageId: string }) {
+      validateFlatForm(form, ['userId', 'messageIds']);
+      const user = await this._getFullUser();
+      user.markPrivateMessagesAsSeen(form.userId, form.lastSeenMessageId);
+      await user.save();
+      const otherUser = await this._getFullUser(form.userId);
+      otherUser.markPrivateMessagesAsSeen(form.userId, form.lastSeenMessageId);
+      await otherUser.save();
+   }
+
    async sendPrivateMessage(form: { userId: string; message: string }) {
       validateFlatForm(form, ['userId'], ['deleteForOtherPerson']);
       const user = await this._getFullUser();
