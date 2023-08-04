@@ -372,6 +372,39 @@ export default class UserService {
       }
       return true;
    }
+
+   async deleteMessageFromPrivateChat(form: {
+      userId: string;
+      messageId: string;
+      deleteForOtherPerson?: boolean;
+   }) {
+      validateFlatForm(form, ['userId', 'messageId'], ['deleteForOtherPerson']);
+      const user = await this._getFullUser();
+      const userPv = user.privateChats.find((pv) => pv.user.equals(form.userId));
+      if (!userPv) throw new AppError(httpStatus.NOT_FOUND);
+      userPv.messages = userPv.messages.filter((m) => m.message.equals(form.messageId));
+      await user.save();
+      if (form.deleteForOtherPerson) {
+         const otherUser = await User.findById(form.userId);
+         if (!otherUser) throw new AppError(httpStatus.NOT_FOUND);
+         const otherUserPv = otherUser.privateChats.find((pv) =>
+            pv.user.equals(this.userIdentity._id)
+         );
+         if (!otherUserPv) throw new AppError(httpStatus.NOT_FOUND);
+         otherUserPv.messages = otherUserPv.messages.filter((m) =>
+            m.message.equals(form.messageId)
+         );
+         await otherUser.save();
+         io.to(form.userId).emit('userSlice', {
+            method: 'deleteUserMessagesFromPrivateChat',
+            arg: {
+               user: this.userIdentity._id,
+               message: form.messageId
+            }
+         });
+      }
+   }
+
    async seen() {
       const user = await this._getFullUser();
       user.lastSeen = new Date();
