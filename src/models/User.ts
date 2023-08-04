@@ -2,6 +2,8 @@ import { Model, Schema, model, Types, HydratedDocument } from 'mongoose';
 import bcrypt from 'bcrypt';
 import pick from '../utils/pick';
 
+export type MessageStatus = 'sent' | 'delivered' | 'seen';
+
 export type Folder = {
    id: Types.ObjectId;
    name: string;
@@ -23,6 +25,7 @@ export interface IUser {
       user: Types.ObjectId;
       messages: {
          sender: Types.ObjectId;
+         status: MessageStatus;
          message: Types.ObjectId;
       }[];
    }[];
@@ -60,6 +63,7 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
             messages: [
                {
                   sender: { type: Schema.Types.ObjectId, ref: 'User' },
+                  status: { type: String, enum: ['sent', 'delivered', 'seen'] },
                   message: { type: Schema.Types.ObjectId, ref: 'Message' }
                }
             ]
