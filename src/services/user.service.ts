@@ -174,8 +174,8 @@ export default class UserService {
       validateFlatForm(form, ['accessToken']);
       this.userIdentity = UserService.getUserIdentity({ accessToken: form.accessToken });
    }
-   private async _getFullUser() {
-      const user = await User.findById(this.userIdentity._id);
+   private async _getFullUser(userId: string = this.userIdentity._id) {
+      const user = await User.findById(userId);
       if (!user) throw new AppError(httpStatus.NOT_FOUND);
       return user;
    }
