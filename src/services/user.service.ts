@@ -292,25 +292,23 @@ export default class UserService {
       }
    }
 
-   async deletePrivateChat(form: { targetUserId: string; deleteForOtherPerson?: boolean }) {
-      validateFlatForm(form, ['targetUserId'], ['deleteForOtherPerson']);
+   async deletePrivateChat(form: { userId: string; deleteForOtherPerson?: boolean }) {
+      validateFlatForm(form, ['userId'], ['deleteForOtherPerson']);
       const user = await this._getFullUser();
-      user.privateMessages = user.privateMessages.filter(
-         (x) => !(x.sender.equals(form.targetUserId) || x.sender.equals(this.userIdentity._id))
-      );
+      user.privateChats = user.privateChats.filter((x) => !x.user.equals(form.userId));
       await user.save();
 
       if (form.deleteForOtherPerson) {
-         const otherUser = await User.findById(form.targetUserId);
+         const otherUser = await User.findById(form.userId);
          if (!otherUser) throw new AppError(httpStatus.NOT_FOUND);
-         otherUser.privateMessages = otherUser.privateMessages.filter(
-            (x) => !x.sender.equals(this.userIdentity._id)
-         );
+         const pv = otherUser.privateChats.find((x) => x.user.equals(this.userIdentity._id));
+         if (!pv) throw new AppError(httpStatus.NOT_FOUND);
+         pv.messages = pv.messages.filter((m) => m.sender.equals(this.userIdentity._id));
          await otherUser.save();
-         io.to(form.targetUserId).emit('UserService', {
-            method: 'updatePrivateMessages',
+         io.to(form.userId).emit('userSlice', {
+            method: 'deleteUserMessagesFromPrivateChat',
             arg: {
-               privateMessages: otherUser.privateMessages
+               user: this.userIdentity._id
             }
          });
       }
