@@ -293,6 +293,22 @@ export default class UserService {
       }
    }
 
+   async getPreviusePrivateMessages(form: { userId: string; limit: number; messageId?: string }) {
+      validateFlatForm(form, ['userId', 'limit'], ['messageId']);
+      const user = await this._getFullUser();
+      const pvIdx = user.privateChats.findIndex((pv) => pv.user.equals(form.userId));
+      if (pvIdx === -1) new AppError(httpStatus.NOT_FOUND);
+      const pv = user.privateChats[pvIdx];
+      if (form.limit < 1) return [];
+      if (form.messageId) {
+         const messageIndex = pv.messages.findIndex((m) => m.message.equals(form.messageId || ''));
+         if (messageIndex === -1) return [];
+         pv.messages = pv.messages.slice(Math.max(0, messageIndex - form.limit), messageIndex);
+         await user.populate(`privateChats.${pvIdx}.messages.message`);
+         return user.privateChats[pvIdx].messages;
+      }
+   }
+
    async markPrivateMessagesAsSeen(form: { userId: string; lastSeenMessageId: string }) {
       validateFlatForm(form, ['userId', 'messageIds']);
       const user = await this._getFullUser();
