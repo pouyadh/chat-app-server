@@ -20,7 +20,10 @@ export interface IUser {
    avatarUrl: string;
    password: string;
    refreshToken?: string;
-   contacts: Types.ObjectId[];
+   contacts: {
+      name: string;
+      user: Types.ObjectId;
+   }[];
    privateChats: {
       user: Types.ObjectId;
       messages: {
@@ -58,7 +61,12 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       avatarUrl: { type: String, required: true },
       password: { type: String, required: true },
       refreshToken: { type: String },
-      contacts: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+      contacts: [
+         {
+            name: String,
+            user: { type: Schema.Types.ObjectId, ref: 'User' }
+         }
+      ],
       privateChats: [
          {
             user: { type: Schema.Types.ObjectId, ref: 'User' },
