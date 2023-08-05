@@ -306,6 +306,13 @@ export default class UserService {
          pv.messages = pv.messages.slice(Math.max(0, messageIndex - form.limit), messageIndex);
          await user.populate(`privateChats.${pvIdx}.messages.message`);
          return user.privateChats[pvIdx].messages;
+      } else {
+         pv.messages = pv.messages.slice(
+            Math.max(0, pv.messages.length - form.limit),
+            pv.messages.length
+         );
+         await user.populate(`privateChats.${pvIdx}.messages.message`);
+         return user.privateChats[pvIdx].messages;
       }
    }
 
