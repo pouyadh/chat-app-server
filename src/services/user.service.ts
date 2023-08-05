@@ -275,7 +275,7 @@ export default class UserService {
       return true;
    }
 
-   async deleteContact(form: { userId: string }) {
+   async removeContact(form: { userId: string }) {
       validateFlatForm(form, ['userId']);
       const user = await this._getFullUser();
       const newContacts = user.contacts.filter((c) => !c.user.equals(form.userId));
