@@ -30,6 +30,7 @@ const fields = {
    messageText: Joi.string(),
    persistent: Joi.boolean(),
    message: Joi.string(),
+   limit: Joi.number(),
    get userIds() {
       return Joi.array().items(this.userId).min(1);
    },
