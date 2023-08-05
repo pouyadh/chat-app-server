@@ -45,6 +45,7 @@ export interface IUserMethods {
    createFolder(name: string, chats?: Folder['chats']): void;
    getPublicProfile(): IUserPublicProfile;
    markPrivateMessagesAsSeen(userId: string, lastSeenMessageId: string): void;
+   getPrivateChat(userId: string): IUser['privateChats'][number] | undefined;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {}
@@ -136,6 +137,12 @@ schema.method<InstanceType<typeof User>>(
       }
    }
 );
+
+schema.method<InstanceType<typeof User>>('getPrivateChat', function getPrivateChat(userId: string):
+   | IUser['privateChats'][number]
+   | undefined {
+   return this.privateChats.find((pv) => pv.user.equals(userId));
+});
 
 const User = model<IUser, UserModel>('User', schema);
 
