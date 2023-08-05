@@ -262,12 +262,15 @@ export default class UserService {
       return { ...omit(user.toObject(), 'password', 'refreshToken'), contacts };
    }
 
-   async addContact(form: { userId: string }) {
-      validateFlatForm(form, ['accessToken', 'userId']);
+   async addContact(form: { userId: string; name?: string }) {
+      validateFlatForm(form, ['userId'], ['name']);
       const user = await this._getFullUser();
       const contact = await User.findById(form.userId);
       if (!contact) throw new AppError(httpStatus.NOT_FOUND);
-      user.contacts.push(contact.id);
+      user.contacts.push({
+         name: form.name || '',
+         user: contact._id
+      });
       await user.save();
       return true;
    }
@@ -275,7 +278,7 @@ export default class UserService {
    async deleteContact(form: { userId: string }) {
       validateFlatForm(form, ['accessToken', 'userId']);
       const user = await this._getFullUser();
-      const newContacts = user.contacts.filter((c) => !c.equals(form.userId));
+      const newContacts = user.contacts.filter((c) => !c.user.equals(form.userId));
       if (user.contacts.length === newContacts.length) throw new AppError(httpStatus.NOT_FOUND);
       user.contacts = newContacts;
       await user.save();
@@ -284,7 +287,7 @@ export default class UserService {
 
    async getContacts(form: { populate?: boolean }) {
       if (form.populate) {
-         const user = await User.findById(this.userIdentity._id).populate('contacts');
+         const user = await User.findById(this.userIdentity._id).populate('contacts.user');
          if (!user) throw new AppError(httpStatus.NOT_FOUND);
          return user.contacts;
       } else {
