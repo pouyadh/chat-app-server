@@ -262,10 +262,10 @@ export default class UserService {
       return { ...omit(user.toObject(), 'password', 'refreshToken'), contacts };
    }
 
-   async addContact(form: { userId: string; name?: string }) {
-      validateFlatForm(form, ['userId'], ['name']);
+   async addContact(form: { username: string; name?: string }) {
+      validateFlatForm(form, ['username'], ['name']);
       const user = await this._getFullUser();
-      const contact = await User.findById(form.userId);
+      const contact = await User.findOne({ username: form.username });
       if (!contact) throw new AppError(httpStatus.NOT_FOUND);
       user.contacts.push({
          name: form.name || '',
