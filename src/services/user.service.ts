@@ -257,7 +257,7 @@ export default class UserService {
          groupChats: HydratedDocument<IGroupChat>[];
          channels: IChannel[];
          contacts: InstanceType<typeof User>[];
-      }>(['groupChats', 'channels', 'contacts']);
+      }>(['groupChats', 'channels', 'contacts.user']);
       const contacts = user.contacts.map((c) => c.getPublicProfile());
       return { ...omit(user.toObject(), 'password', 'refreshToken'), contacts };
    }
