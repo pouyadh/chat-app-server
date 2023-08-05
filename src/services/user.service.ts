@@ -276,7 +276,7 @@ export default class UserService {
    }
 
    async deleteContact(form: { userId: string }) {
-      validateFlatForm(form, ['accessToken', 'userId']);
+      validateFlatForm(form, ['userId']);
       const user = await this._getFullUser();
       const newContacts = user.contacts.filter((c) => !c.user.equals(form.userId));
       if (user.contacts.length === newContacts.length) throw new AppError(httpStatus.NOT_FOUND);
