@@ -268,7 +268,10 @@ export default class UserService {
          user: contact._id
       });
       await user.save();
-      return true;
+      return {
+         name: form.name,
+         user: contact._id.toString()
+      };
    }
 
    async removeContact(form: { userId: string }) {
