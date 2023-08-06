@@ -259,7 +259,10 @@ export default class UserService {
       validateFlatForm(form, ['username'], ['name']);
       const user = await this._getFullUser();
       const contact = await User.findOne({ username: form.username });
-      if (!contact) throw new AppError(httpStatus.NOT_FOUND);
+      if (!contact) throw new AppError(httpStatus.NOT_FOUND, 'Username does not exists');
+
+      if (user.contacts.find((c) => c.user.equals(contact._id)))
+         throw new AppError(httpStatus.CONFLICT, 'This contact already exists');
       user.contacts.push({
          name: form.name || '',
          user: contact._id
