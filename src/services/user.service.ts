@@ -166,7 +166,7 @@ export default class UserService {
    static async getPublicProfilesById(form: { userIds: string[] }) {
       validateFlatForm(form, ['userIds']);
       const users = await User.find({ _id: { $in: form.userIds } });
-      return users.forEach((u) => u.getPublicProfile());
+      return users.map((u) => u.getPublicProfile());
    }
 
    userIdentity: IUserIdentity;
