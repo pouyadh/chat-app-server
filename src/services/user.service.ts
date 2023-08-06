@@ -329,7 +329,7 @@ export default class UserService {
    }
 
    async sendPrivateMessage(form: { userId: string; message: string }) {
-      validateFlatForm(form, ['userId'], ['deleteForOtherPerson']);
+      validateFlatForm(form, ['userId', 'message']);
       const user = await this._getFullUser();
       const userOid = new Types.ObjectId(this.userIdentity._id);
       const otherUserOid = new Types.ObjectId(form.userId);
