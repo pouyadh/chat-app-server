@@ -251,15 +251,8 @@ export default class UserService {
    }
 
    async getUserData() {
-      const user = await (
-         await this._getFullUser()
-      ).populate<{
-         groupChats: HydratedDocument<IGroupChat>[];
-         channels: IChannel[];
-         contacts: InstanceType<typeof User>[];
-      }>(['groupChats', 'channels', 'contacts.user']);
-      const contacts = user.contacts.map((c) => c.getPublicProfile());
-      return { ...omit(user.toObject(), 'password', 'refreshToken'), contacts };
+      const user = await this._getFullUser();
+      return omit(user.toObject(), 'password', 'refreshToken');
    }
 
    async addContact(form: { username: string; name?: string }) {
