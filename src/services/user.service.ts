@@ -281,7 +281,7 @@ export default class UserService {
       if (user.contacts.length === newContacts.length) throw new AppError(httpStatus.NOT_FOUND);
       user.contacts = newContacts;
       await user.save();
-      return true;
+      return form.userId;
    }
 
    async getContacts(form: { populate?: boolean }) {
