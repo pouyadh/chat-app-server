@@ -390,7 +390,11 @@ export default class UserService {
       await user.save();
       await otherUser.save();
 
-      return true;
+      return {
+         sender: userOid,
+         status: messageStatus,
+         message: message._id.toString()
+      };
    }
 
    async deletePrivateChat(form: { userId: string; deleteForOtherPerson?: boolean }) {
