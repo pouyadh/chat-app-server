@@ -31,6 +31,7 @@ const fields = {
    persistent: Joi.boolean(),
    message: Joi.string(),
    limit: Joi.number(),
+   text: Joi.string(),
    get userIds() {
       return Joi.array().items(this.userId).min(1);
    },
@@ -39,6 +40,9 @@ const fields = {
    },
    get subscriberUserIds() {
       return Joi.array().items(this.subscriberUserId);
+   },
+   get contentIds() {
+      return Joi.array().items(this.id).min(1);
    },
    deleteForEveryone: Joi.boolean(),
    userService: Joi.object(),
