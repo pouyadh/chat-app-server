@@ -8,7 +8,7 @@ import { JoiFrom, validateFlatForm } from './_joi/validateForm';
 import { AppError } from '../library/AppError';
 import httpStatus from 'http-status';
 import UserService, { IUserIdentity } from './user.service';
-import Message, { IMessage } from '../models/Message';
+import Content, { IContent } from '../models/Content';
 import { getSocketByUserIds, kickAllSocketsFromTheRoom } from '../@socket/utils';
 import { io } from '../@socket/socket';
 import User from '../models/User';
@@ -238,19 +238,19 @@ export default class ChannelService {
       });
    }
 
-   async postMessage(form: { channelId: string; message: string }) {
-      validateFlatForm(form, ['message']);
+   async postMessage(form: { channelId: string; text: string }) {
+      validateFlatForm(form, ['text']);
       const chat = await ChannelService._getChat(form.channelId);
       this._checkPermission(chat, 'postMessages');
       const sender = new Types.ObjectId(this.userIdentity._id);
-      const message = new Message({
-         _id: new Types.ObjectId(),
-         sender,
-         message: form.message
+      const content = new Content({
+         text: form.text,
+         edited: false
       });
       chat.addMessage({
+         _id: new Types.ObjectId(),
          sender,
-         message: message._id,
+         content: content._id,
          hiddenFor: []
       });
       await chat.save();
@@ -296,8 +296,8 @@ export default class ChannelService {
       }
    }
 
-   async editMessage(form: { channelId: string; messageId: string; content: IMessage['content'] }) {
-      validateFlatForm(form, ['channelId', 'messageId'], ['deleteForEveryone']);
+   async editMessage(form: { channelId: string; messageId: string; text: string }) {
+      validateFlatForm(form, ['channelId', 'messageId', 'text']);
       const chat = await ChannelService._getChat(form.channelId);
       const messageItem = chat.getMessage(form.messageId);
       if (!messageItem) throw new AppError(httpStatus.NOT_FOUND);
@@ -309,11 +309,11 @@ export default class ChannelService {
          this._checkPermission(chat, 'editMessagesOfOthers');
       }
 
-      const message = await Message.findById(form.messageId);
-      if (!message) throw new AppError(httpStatus.NOT_FOUND);
-      message.content = form.content;
-      message.edited = true;
-      message.save();
+      const content = await Content.findById(messageItem.data.content._id);
+      if (!content) throw new AppError(httpStatus.NOT_FOUND);
+      content.text = form.text;
+      content.edited = true;
+      content.save();
       io.in(form.channelId).emit('ChannelService', {
          method: 'editMessage',
          arg: form

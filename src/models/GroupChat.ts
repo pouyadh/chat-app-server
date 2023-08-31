@@ -43,8 +43,9 @@ export type GroupChatRoles = 'owner' | 'admin' | 'member' | 'user' | 'guest';
 export type GroupChatMessageContentItem = {
    type: 'message';
    data: {
+      _id: Types.ObjectId;
       sender: Types.ObjectId;
-      message: Types.ObjectId;
+      content: Types.ObjectId;
       hiddenFor: Types.ObjectId[];
    };
 };
@@ -347,7 +348,7 @@ GroupChatSchema.method<InstanceType<typeof GroupChat>>(
    'deleteMessage',
    function deleteMessage(messageId: string): void {
       this.contents = this.contents.filter(
-         ({ type, data }) => type === 'activity' || !data.message.equals(messageId)
+         ({ type, data }) => type === 'activity' || !data._id.equals(messageId)
       );
    }
 );
@@ -356,7 +357,7 @@ GroupChatSchema.method<InstanceType<typeof GroupChat>>(
    'getMessage',
    function getMessage(messageId: string): GroupChatMessageContentItem | undefined {
       return this.contents.find(
-         ({ type, data }) => type === 'message' && data.message.equals(messageId)
+         ({ type, data }) => type === 'message' && data._id.equals(messageId)
       ) as GroupChatMessageContentItem | undefined;
    }
 );

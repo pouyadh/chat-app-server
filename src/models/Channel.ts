@@ -38,8 +38,9 @@ export type ChannelRoles = 'owner' | 'admin' | 'subscriber' | 'user' | 'guest';
 export type ChannelMessageContentItem = {
    type: 'message';
    data: {
+      _id: Types.ObjectId;
       sender: Types.ObjectId;
-      message: Types.ObjectId;
+      content: Types.ObjectId;
       hiddenFor: Types.ObjectId[];
    };
 };
@@ -181,8 +182,9 @@ const ChannelSchema = new Schema<IChannel, ChannelModel, IChannelMethods>(
             },
             data: {
                // If type === 'message'
+               _id: { type: Schema.Types.ObjectId },
                sender: { Type: Schema.Types.ObjectId, ref: 'User' },
-               message: { type: Schema.Types.ObjectId, ref: 'Message' },
+               content: { type: Schema.Types.ObjectId, ref: 'Content' },
                hiddenFor: [{ Type: Schema.Types.ObjectId, ref: 'User' }],
                // If type === 'activity'
                commiter: { Type: Schema.Types.ObjectId, ref: 'User' },
@@ -286,7 +288,7 @@ ChannelSchema.method<InstanceType<typeof Channel>>(
    'deleteMessage',
    function deleteMessage(messageId: string): void {
       this.contents = this.contents.filter(
-         ({ type, data }) => type === 'activity' || !data.message.equals(messageId)
+         ({ type, data }) => type === 'activity' || !data._id.equals(messageId)
       );
    }
 );
@@ -295,7 +297,7 @@ ChannelSchema.method<InstanceType<typeof Channel>>(
    'getMessage',
    function getMessage(messageId: string): ChannelMessageContentItem | undefined {
       return this.contents.find(
-         ({ type, data }) => type === 'message' && data.message.equals(messageId)
+         ({ type, data }) => type === 'message' && data._id.equals(messageId)
       ) as ChannelMessageContentItem | undefined;
    }
 );

@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import { io } from '../@socket/socket';
 import { IGroupChat } from '../models/GroupChat';
 import { IChannel } from '../models/Channel';
-import Message from '../models/Message';
+import Content from '../models/Content';
 import { getSocketByUserId } from '../@socket/utils';
 
 export interface IUserIdentity {
@@ -303,7 +303,7 @@ export default class UserService {
       const pv = user.privateChats[pvIdx];
       if (form.limit < 1) return [];
       if (form.messageId) {
-         const messageIndex = pv.messages.findIndex((m) => m.message.equals(form.messageId || ''));
+         const messageIndex = pv.messages.findIndex((m) => m._id.equals(form.messageId || ''));
          if (messageIndex === -1) return [];
          pv.messages = pv.messages.slice(Math.max(0, messageIndex - form.limit), messageIndex);
          await user.populate(`privateChats.${pvIdx}.messages.message`);
@@ -328,31 +328,29 @@ export default class UserService {
       await otherUser.save();
    }
 
-   async sendPrivateMessage(form: { userId: string; message: string }) {
-      validateFlatForm(form, ['userId', 'message']);
+   async sendPrivateMessage(form: { userId: string; text: string }) {
+      validateFlatForm(form, ['userId', 'text']);
       const user = await this._getFullUser();
       const userOid = new Types.ObjectId(this.userIdentity._id);
       const otherUserOid = new Types.ObjectId(form.userId);
       let messageStatus: MessageStatus = 'sent';
-      const message = new Message({
-         _id: userOid,
-         sender: this.userIdentity._id,
-         content: {
-            text: form.message
-         }
+      const content = new Content({
+         text: form.text,
+         edited: false
       });
+      const message = {
+         _id: new Types.ObjectId(),
+         sender: userOid,
+         status: messageStatus,
+         content: content._id,
+         sentAt: new Date()
+      };
 
       const otherUserSocket = getSocketByUserId(form.userId);
       if (otherUserSocket) {
-         otherUserSocket.emit('userSlice', {
+         otherUserSocket.emit('appAction', {
             method: 'addMessageToPrivateChat',
-            arg: {
-               user: this.userIdentity._id,
-               message: {
-                  sender: this.userIdentity._id,
-                  message: message.toObject()
-               }
-            }
+            arg: { userId: this.userIdentity._id, message, content: content.toObject() }
          });
          messageStatus = 'delivered';
       }
@@ -365,11 +363,7 @@ export default class UserService {
          };
          user.privateChats.push(userPv);
       }
-      userPv.messages.push({
-         sender: userOid,
-         status: messageStatus,
-         message: message._id
-      });
+      userPv.messages.push(message);
 
       const otherUser = await User.findById(form.userId);
       if (!otherUser) throw new AppError(httpStatus.NOT_FOUND);
@@ -381,20 +375,13 @@ export default class UserService {
          };
          otherUser.privateChats.push(otherUserPv);
       }
-      otherUserPv.messages.push({
-         sender: userOid,
-         status: messageStatus,
-         message: message._id
-      });
+      otherUserPv.messages.push(message);
 
+      await content.save();
       await user.save();
       await otherUser.save();
 
-      return {
-         sender: userOid,
-         status: messageStatus,
-         message: message._id.toString()
-      };
+      return { userId: form.userId, message, content: content.toObject() };
    }
 
    async deletePrivateChat(form: { userId: string; deleteForOtherPerson?: boolean }) {
@@ -410,7 +397,7 @@ export default class UserService {
          if (!pv) throw new AppError(httpStatus.NOT_FOUND);
          pv.messages = pv.messages.filter((m) => m.sender.equals(this.userIdentity._id));
          await otherUser.save();
-         io.to(form.userId).emit('userSlice', {
+         io.to(form.userId).emit('appAction', {
             method: 'deleteUserMessagesFromPrivateChat',
             arg: {
                user: this.userIdentity._id
@@ -429,7 +416,7 @@ export default class UserService {
       const user = await this._getFullUser();
       const userPv = user.privateChats.find((pv) => pv.user.equals(form.userId));
       if (!userPv) throw new AppError(httpStatus.NOT_FOUND);
-      userPv.messages = userPv.messages.filter((m) => m.message.equals(form.messageId));
+      userPv.messages = userPv.messages.filter((m) => m._id.equals(form.messageId));
       await user.save();
       if (form.deleteForOtherPerson) {
          const otherUser = await User.findById(form.userId);
@@ -438,11 +425,9 @@ export default class UserService {
             pv.user.equals(this.userIdentity._id)
          );
          if (!otherUserPv) throw new AppError(httpStatus.NOT_FOUND);
-         otherUserPv.messages = otherUserPv.messages.filter((m) =>
-            m.message.equals(form.messageId)
-         );
+         otherUserPv.messages = otherUserPv.messages.filter((m) => m._id.equals(form.messageId));
          await otherUser.save();
-         io.to(form.userId).emit('userSlice', {
+         io.to(form.userId).emit('appAction', {
             method: 'deleteUserMessagesFromPrivateChat',
             arg: {
                user: this.userIdentity._id,
@@ -507,5 +492,11 @@ export default class UserService {
       if (cCountBefroeRemove === folder.chats.length) throw new AppError(httpStatus.NOT_FOUND);
       await user.save();
       return true;
+   }
+
+   async getContents(form: { contentIds: string[] }) {
+      validateFlatForm(form, ['contentIds']);
+      const contents = await Content.find({ _id: { $in: form.contentIds } });
+      return contents;
    }
 }

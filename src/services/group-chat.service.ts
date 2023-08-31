@@ -8,7 +8,7 @@ import { JoiFrom, validateFlatForm } from './_joi/validateForm';
 import { AppError } from '../library/AppError';
 import httpStatus from 'http-status';
 import UserService, { IUserIdentity } from './user.service';
-import Message from '../models/Message';
+import Content from '../models/Content';
 import { kickAllSocketsFromTheRoom } from '../@socket/utils';
 import { io } from '../@socket/socket';
 import throwIfError from '../utils/throwIfError';
@@ -202,19 +202,19 @@ export default class GroupChatService {
       });
    }
 
-   async sendMessage(form: { groupChatId: string; message: string }) {
-      validateFlatForm(form, ['message']);
+   async sendMessage(form: { groupChatId: string; text: string }) {
+      validateFlatForm(form, ['groupChatId', 'text']);
       const chat = await GroupChatService._getChat(form.groupChatId);
       this._checkPermission(chat, 'sendMessage');
       const sender = new Types.ObjectId(this.userIdentity._id);
-      const message = new Message({
-         _id: new Types.ObjectId(),
-         sender,
-         message: form.message
+      const content = new Content({
+         text: form.text,
+         edited: false
       });
       chat.addMessage({
+         _id: new Types.ObjectId(),
          sender,
-         message: message._id,
+         content: content._id,
          hiddenFor: []
       });
       await chat.save();

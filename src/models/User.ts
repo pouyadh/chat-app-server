@@ -1,6 +1,7 @@
 import { Model, Schema, model, Types, HydratedDocument } from 'mongoose';
 import bcrypt from 'bcrypt';
 import pick from '../utils/pick';
+import { IContent } from './Content';
 
 export type MessageStatus = 'sent' | 'delivered' | 'seen';
 
@@ -12,6 +13,15 @@ export type Folder = {
       id: Types.ObjectId;
    }[];
 };
+
+export type IMessage = {
+   _id: Types.ObjectId;
+   sender: Types.ObjectId;
+   status: MessageStatus;
+   content: Types.ObjectId;
+   sentAt: Date;
+};
+export type IMessagePopulated = IMessage & { content: IContent };
 
 export interface IUser {
    username: string;
@@ -26,11 +36,7 @@ export interface IUser {
    }[];
    privateChats: {
       user: Types.ObjectId;
-      messages: {
-         sender: Types.ObjectId;
-         status: MessageStatus;
-         message: Types.ObjectId;
-      }[];
+      messages: IMessage[];
    }[];
    groupChats: Types.ObjectId[];
    channels: Types.ObjectId[];
@@ -72,9 +78,11 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
             user: { type: Schema.Types.ObjectId, ref: 'User' },
             messages: [
                {
+                  _id: { type: Schema.Types.ObjectId, default: new Types.ObjectId() },
                   sender: { type: Schema.Types.ObjectId, ref: 'User' },
                   status: { type: String, enum: ['sent', 'delivered', 'seen'] },
-                  message: { type: Schema.Types.ObjectId, ref: 'Message' }
+                  content: { type: Schema.Types.ObjectId, ref: 'Content' },
+                  sentAt: { type: Date, default: () => new Date() }
                }
             ]
          }
@@ -82,7 +90,7 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       groupChats: [{ type: Schema.Types.ObjectId, ref: 'GroupChat' }],
       channels: [{ type: Schema.Types.ObjectId, ref: 'Channel' }],
       savedMessages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
-      lastSeen: { type: Date, default: Date.now },
+      lastSeen: { type: Date, default: () => new Date() },
       folders: [
          {
             id: Schema.Types.ObjectId,
@@ -137,7 +145,7 @@ schema.method<InstanceType<typeof User>>(
       const pv = this.privateChats.find((pv) => pv.user.equals(userId));
       if (!pv) return;
       let idx: number = pv.messages.length - 1;
-      while (idx > 0 && !pv.messages[idx].message.equals(lastSeenMessageId)) {
+      while (idx > 0 && !pv.messages[idx]._id.equals(lastSeenMessageId)) {
          idx--;
       }
       while (idx > 0 && pv.messages[idx].status !== 'seen') {
