@@ -1,5 +1,5 @@
 import { HydratedDocument, Types } from 'mongoose';
-import User, { Folder, IUser, IUserMethods, MessageStatus } from '../models/User';
+import User, { Chat, Folder, IUser, IUserMethods, MessageStatus } from '../models/User';
 import { AppError } from '../library/AppError';
 import httpStatus from 'http-status';
 import omit from '../utils/omit';
