@@ -58,7 +58,16 @@ export interface IUserMethods {
    verifyPassword(password: string): boolean;
    createFolder(name: string, chats?: Folder['chats']): void;
    getPublicProfile(): IUserPublicProfile;
-
+   markMessagesAsDelivered(
+      chat: Chat,
+      lastDeliveredMessageId: string,
+      sender?: 'own' | 'except-own' | 'all'
+   ): void;
+   markMessagesAsSeen(
+      chat: Chat,
+      lastSeenMessageId: string,
+      sender?: 'own' | 'except-own' | 'all'
+   ): void;
    getPrivateChat(userId: string): IUser['privateChats'][number] | undefined;
 }
 
@@ -141,6 +150,82 @@ schema.method<InstanceType<typeof User>>(
    'getPublicProfile',
    function getPublicProfile(): IUserPublicProfile {
       return pick(this.toObject(), '_id', 'username', 'name', 'avatarUrl');
+   }
+);
+
+schema.method<InstanceType<typeof User>>(
+   'markMessagesAsDelivered',
+   function markMessagesAsDelivered(
+      chat: Chat,
+      lastDeliveredMessageId: string,
+      sender?: 'own' | 'except-own' | 'all'
+   ): void {
+      const shouldMarkFns = {
+         own: (senderId: Types.ObjectId) => senderId.equals(this._id),
+         'except-own': (senderId: Types.ObjectId) => !senderId.equals(this._id),
+         all: (senderId: Types.ObjectId) => true
+      };
+      let shouldMarkFn = shouldMarkFns[sender ? sender : 'own'];
+      switch (chat.type) {
+         case 'user':
+            const pv = this.privateChats.find((pv) => pv.user.equals(chat.id));
+            if (!pv) return;
+            let idx: number = pv.messages.length - 1;
+            if (lastDeliveredMessageId) {
+               while (idx > 0 && !pv.messages[idx]._id.equals(lastDeliveredMessageId)) {
+                  idx--;
+               }
+            }
+            while (idx >= 0 && pv.messages[idx].status === 'sent') {
+               if (shouldMarkFn(pv.messages[idx].sender)) {
+                  pv.messages[idx].status = 'delivered';
+               }
+               idx--;
+            }
+            break;
+         case 'group':
+            break;
+         case 'channel':
+            break;
+      }
+   }
+);
+
+schema.method<InstanceType<typeof User>>(
+   'markMessagesAsSeen',
+   function markMessagesAsSeen(
+      chat: Chat,
+      lastSeenMessageId: string,
+      sender?: 'own' | 'except-own' | 'all'
+   ): void {
+      const shouldMarkFns = {
+         own: (senderId: Types.ObjectId) => senderId.equals(this._id),
+         'except-own': (senderId: Types.ObjectId) => !senderId.equals(this._id),
+         all: (senderId: Types.ObjectId) => true
+      };
+      let shouldMarkFn = shouldMarkFns[sender ? sender : 'own'];
+      switch (chat.type) {
+         case 'user':
+            const pv = this.privateChats.find((pv) => pv.user.equals(chat.id));
+            if (!pv) return;
+            let idx: number = pv.messages.length - 1;
+            if (lastSeenMessageId) {
+               while (idx > 0 && !pv.messages[idx]._id.equals(lastSeenMessageId)) {
+                  idx--;
+               }
+            }
+            while (idx >= 0 && pv.messages[idx].status !== 'seen') {
+               if (shouldMarkFn(pv.messages[idx].sender)) {
+                  pv.messages[idx].status = 'seen';
+               }
+               idx--;
+            }
+            break;
+         case 'group':
+            break;
+         case 'channel':
+            break;
+      }
    }
 );
 
