@@ -252,6 +252,37 @@ export default class UserService {
 
    async getUserData() {
       const user = await this._getFullUser();
+      user.privateChats.forEach(async (pv) => {
+         // Mark messages that were sent to user as delivered for themselves
+         const chat = {
+            type: 'user',
+            id: pv.user.toString()
+         } as Chat;
+         user.markMessagesAsDelivered(chat, '', 'except-own');
+
+         // Mark messages that were sent by other user as delivered for themselfs
+         const otherUser = await this._getFullUser(chat.id);
+         const otherUserChat = {
+            type: 'user',
+            id: this.userIdentity._id
+         } as Chat;
+         otherUser.markMessagesAsDelivered(otherUserChat, '', 'own');
+         await otherUser.save();
+
+         // Notif other user about message delivery if the person is online
+         const userSocket = getSocketByUserId(chat.id);
+         if (userSocket) {
+            userSocket.emit('appAction', {
+               method: 'markMessageAsDelivered',
+               arg: {
+                  chat: otherUserChat,
+                  messageId: '',
+                  sender: 'own'
+               }
+            });
+         }
+      });
+      await user.save();
       return omit(user.toObject(), 'password', 'refreshToken');
    }
 
