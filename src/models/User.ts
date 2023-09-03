@@ -3,6 +3,11 @@ import bcrypt from 'bcrypt';
 import pick from '../utils/pick';
 import { IContent } from './Content';
 
+export type Chat = {
+   type: 'user' | 'group' | 'channel';
+   id: string;
+};
+
 export type MessageStatus = 'sent' | 'delivered' | 'seen';
 
 export type Folder = {
