@@ -383,7 +383,6 @@ export default class UserService {
       const user = await this._getFullUser();
       const userOid = new Types.ObjectId(this.userIdentity._id);
       const otherUserOid = new Types.ObjectId(form.userId);
-      let messageStatus: MessageStatus = 'sent';
       const content = new Content({
          text: form.text,
          edited: false
@@ -391,18 +390,18 @@ export default class UserService {
       const message = {
          _id: new Types.ObjectId(),
          sender: userOid,
-         status: messageStatus,
+         status: 'sent' as MessageStatus,
          content: content._id,
          sentAt: new Date()
       };
 
       const otherUserSocket = getSocketByUserId(form.userId);
       if (otherUserSocket) {
+         message.status = 'delivered';
          otherUserSocket.emit('appAction', {
             method: 'addMessageToPrivateChat',
             arg: { userId: this.userIdentity._id, message, content: content.toObject() }
          });
-         messageStatus = 'delivered';
       }
 
       let userPv = user.privateChats.find((pv) => pv.user.equals(form.userId));
