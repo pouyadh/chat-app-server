@@ -349,14 +349,33 @@ export default class UserService {
       }
    }
 
-   async markPrivateMessagesAsSeen(form: { userId: string; lastSeenMessageId: string }) {
-      validateFlatForm(form, ['userId', 'messageIds']);
+   async markMessageAsSeen(form: { chat: Chat; messageId: string }) {
       const user = await this._getFullUser();
-      user.markPrivateMessagesAsSeen(form.userId, form.lastSeenMessageId);
+      user.markMessagesAsSeen(form.chat, form.messageId, 'except-own');
       await user.save();
-      const otherUser = await this._getFullUser(form.userId);
-      otherUser.markPrivateMessagesAsSeen(form.userId, form.lastSeenMessageId);
-      await otherUser.save();
+      if (form.chat.type === 'user') {
+         const otherUser = await this._getFullUser(form.chat.id);
+         otherUser.markMessagesAsSeen(
+            {
+               type: 'user',
+               id: this.userIdentity._id
+            },
+            form.messageId,
+            'own'
+         );
+         await otherUser.save();
+         getSocketByUserId(form.chat.id)?.emit('appAction', {
+            method: 'markMessageAsSeen',
+            arg: {
+               chat: {
+                  type: 'user',
+                  id: this.userIdentity._id
+               },
+               messageId: form.messageId,
+               sender: 'own'
+            }
+         });
+      }
    }
 
    async sendPrivateMessage(form: { userId: string; text: string }) {
